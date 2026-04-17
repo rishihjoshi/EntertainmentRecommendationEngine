@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f" id="themeColor">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DUET">
+  <link rel="manifest" href="./manifest.json">
+  <title>DUET — His & Her Cinema</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Sans:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    /* ═══════ THEME TOKENS ═══════ */
+    :root {
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --nav-h: 68px;
+    }
+
+    /* HIS — deep noir with electric blue & crimson */
+    html[data-profile="his"] {
+      --bg:       #0a0a0f;
+      --bg2:      #141421;
+      --bg3:      #1d1d2e;
+      --text:     #e8e8ec;
+      --text-dim: #7d7d8a;
+      --accent:   #2563eb;   /* electric blue */
+      --accent2:  #dc2626;   /* crimson red */
+      --accent-soft: #1e40af;
+      --border:   #25253a;
+      --shadow:   0 30px 80px -20px rgba(37, 99, 235, 0.35), 0 0 0 1px rgba(255,255,255,0.04);
+      --poster-frame: rgba(255,255,255,0.08);
+      --font-display: 'DM Sans', system-ui, sans-serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    /* HER — ivory with champagne & rose gold */
+    html[data-profile="her"] {
+      --bg:       #faf6f0;
+      --bg2:      #f3ead9;
+      --bg3:      #ebdcc3;
+      --text:     #2a1f18;
+      --text-dim: #8a7660;
+      --accent:   #b88645;   /* champagne gold */
+      --accent2:  #b76e79;   /* rose gold */
+      --accent-soft: #d4a76a;
+      --border:   #e3d3b8;
+      --shadow:   0 30px 80px -20px rgba(183, 110, 121, 0.35), 0 0 0 1px rgba(42,31,24,0.05);
+      --poster-frame: rgba(42,31,24,0.08);
+      --font-display: 'Bodoni Moda', Georgia, serif;
+      --font-body: 'Bodoni Moda', Georgia, serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.5;
+      overflow: hidden;
+      overscroll-behavior: none;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+
+    /* subtle theme-aware grain/texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background-image:
+        radial-gradient(circle at 20% 10%, var(--accent) 0%, transparent 40%),
+        radial-gradient(circle at 80% 90%, var(--accent2) 0%, transparent 45%);
+      opacity: 0.08;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      mix-blend-mode: overlay;
+    }
+
+    #app {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+    }
+
+    /* ═══════ HEADER ═══════ */
+    header {
+      padding: calc(var(--safe-t) + 10px) 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(to bottom, var(--bg), transparent);
+      position: relative;
+    }
+    .h-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    html[data-profile="her"] .logo {
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      font-style: italic;
+    }
+
+    .profile-switch {
+      display: flex;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+      position: relative;
+    }
+    .profile-switch button {
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.3s;
+      position: relative; z-index: 1;
+    }
+    .profile-switch button.active {
+      color: #fff;
+    }
+    html[data-profile="her"] .profile-switch button.active { color: #fff; }
+    .profile-switch .pill {
+      position: absolute;
+      top: 3px; bottom: 3px;
+      width: calc(50% - 3px);
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      left: 3px;
+    }
+    html[data-profile="her"] .profile-switch .pill { left: calc(50% ); }
+
+    /* ═══════ MAIN AREA ═══════ */
+    main {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .view.active { display: flex; }
+
+    /* ═══════ DISCOVER / SWIPE DECK ═══════ */
+    #view-discover { padding: 14px 14px 0; }
+
+    .deck-wrap {
+      flex: 1;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 0;
+    }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 2 / 3.1;
+      max-height: calc(100% - 20px);
+    }
+
+    .card {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--bg2);
+      border: 1px solid var(--poster-frame);
+      box-shadow: var(--shadow);
+      cursor: grab;
+      transition: transform 0.45s cubic-bezier(.2,.8,.2,1), opacity 0.45s;
+      will-change: transform, opacity;
+      user-select: none;
+    }
+    .card.dragging { transition: none; cursor: grabbing; }
+    .card.gone { transition: transform 0.55s cubic-bezier(.4,0,.2,1), opacity 0.35s; }
+
+    .card img.poster {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .card .placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 54px;
+      color: var(--text-dim);
+      background: linear-gradient(135deg, var(--bg2), var(--bg3));
+    }
+
+    .card-info {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 90px 18px 18px;
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 15%, rgba(0,0,0,0.6) 55%, transparent);
+      color: #fff;
+    }
+    html[data-profile="her"] .card-info {
+      background: linear-gradient(to top, rgba(20,10,5,0.88) 15%, rgba(20,10,5,0.55) 55%, transparent);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+    html[data-profile="her"] .card-title {
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .card-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 10px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .card-meta .dot { opacity: 0.5; }
+    .rating-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      background: rgba(255,215,100,0.15);
+      border: 1px solid rgba(255,215,100,0.3);
+      color: #ffd76a;
+    }
+    .card-why {
+      font-size: 14.5px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.9);
+      max-height: 72px;
+      overflow: hidden;
+    }
+
+    /* swipe labels */
+    .swipe-label {
+      position: absolute;
+      top: 30px;
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border: 3px solid;
+      border-radius: 10px;
+      opacity: 0;
+      transform: rotate(-15deg);
+      pointer-events: none;
+      transition: opacity 0.1s;
+      z-index: 3;
+    }
+    .swipe-label.like {
+      right: 20px;
+      color: #4ade80;
+      border-color: #4ade80;
+      transform: rotate(-15deg);
+    }
+    .swipe-label.nope {
+      left: 20px;
+      color: #f87171;
+      border-color: #f87171;
+      transform: rotate(15deg);
+    }
+
+    /* action buttons */
+    .actions {
+      display: flex; gap: 14px; justify-content: center; align-items: center;
+      padding: 14px 0 calc(var(--nav-h) + var(--safe-b) + 14px);
+    }
+    .action-btn {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, background 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .action-btn:active { transform: scale(0.9); }
+    .action-btn.pass:hover { color: #f87171; border-color: #f87171; }
+    .action-btn.like { width: 72px; height: 72px; font-size: 28px; }
+    .action-btn.like { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border-color: transparent; }
+    .action-btn.info:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* empty state */
+    .empty {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-dim);
+    }
+    .empty h3 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      color: var(--text);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .empty p { margin-bottom: 20px; line-height: 1.6; }
+    .empty button {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    /* loading */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+    }
+    .loading .spinner {
+      width: 40px; height: 40px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════ MATCHES / PICKS VIEW ═══════ */
+    .picks-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 14px calc(var(--nav-h) + var(--safe-b) + 20px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 18px 4px 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 10px;
+    }
+    .pick {
+      position: relative;
+      aspect-ratio: 2/3;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg2);
+      border: 1px solid var(--poster-frame);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+    .pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pick-empty-poster {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-dim);
+      font-size: 28px;
+    }
+    .pick-label {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 24px 6px 6px;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pick-badge {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      border: 2px solid var(--bg);
+    }
+    .pick .remove {
+      position: absolute;
+      top: 4px; left: 4px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      line-height: 1;
+      border: none;
+      opacity: 0; transition: opacity 0.2s;
+      cursor: pointer;
+    }
+    .pick:hover .remove, .pick:active .remove { opacity: 1; }
+
+    /* ═══════ SETTINGS VIEW ═══════ */
+    .settings-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px calc(var(--nav-h) + var(--safe-b) + 20px);
+      -webkit-overflow-scrolling: touch;
+    }
+    .sfield {
+      margin-bottom: 22px;
+    }
+    .sfield label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .sfield input, .sfield textarea {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .sfield input:focus, .sfield textarea:focus {
+      border-color: var(--accent);
+    }
+    .sfield .hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+    .sfield .hint a { color: var(--accent); text-decoration: none; }
+
+    .sbtn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      padding: 13px 22px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .sbtn.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .sbtn.danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+    .setup-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .setup-card h3 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .setup-card p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .setup-card ol { padding-left: 20px; font-size: 14px; line-height: 1.7; }
+    .setup-card ol li { margin-bottom: 4px; }
+    .sync-status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    .sync-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text-dim);
+    }
+    .sync-dot.ok { background: #4ade80; }
+    .sync-dot.err { background: #f87171; }
+    .sync-dot.busy { background: var(--accent); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% {opacity:1;} 50% {opacity:0.3;} }
+
+    /* ═══════ BOTTOM NAV ═══════ */
+    nav.bottom {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 10;
+    }
+    nav.bottom button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px;
+      position: relative;
+      transition: color 0.2s;
+    }
+    nav.bottom button .ico {
+      font-size: 20px;
+      line-height: 1;
+    }
+    nav.bottom button.active {
+      color: var(--accent);
+    }
+    nav.bottom button.active::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 30%; right: 30%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .nav-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      background: var(--accent2);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      display: none;
+      align-items: center; justify-content: center;
+      letter-spacing: 0;
+    }
+    .nav-badge.show { display: flex; }
+
+    /* ═══════ TOAST ═══════ */
+    .toast {
+      position: fixed;
+      top: calc(var(--safe-t) + 70px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ═══════ ONBOARDING OVERLAY ═══════ */
+    .onboard {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
+    .onboard.hidden {
+      opacity: 0; visibility: hidden;
+    }
+    .onboard-inner {
+      max-width: 380px; text-align: center;
+    }
+    .onboard h1 {
+      font-family: var(--font-display);
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .onboard .tagline {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 40px;
+    }
+    .onboard .choose {
+      font-family: var(--font-display);
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .onboard-picks {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .pcard {
+      aspect-ratio: 2/3;
+      border-radius: 16px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: transform 0.2s;
+    }
+    .pcard:active { transform: scale(0.96); }
+    .pcard.his {
+      background: linear-gradient(135deg, #0a0a0f 0%, #141421 50%, #2563eb 100%);
+      color: #fff;
+      border-color: #2563eb;
+    }
+    .pcard.her {
+      background: linear-gradient(135deg, #faf6f0 0%, #f3ead9 50%, #b76e79 100%);
+      color: #2a1f18;
+      border-color: #b76e79;
+      font-weight: 500;
+      font-style: italic;
+    }
+    .pcard span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* small phones */
+    @media (max-height: 700px) {
+      .card-title { font-size: 22px; }
+      .action-btn { width: 50px; height: 50px; }
+      .action-btn.like { width: 62px; height: 62px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ ONBOARDING ═══════ -->
+<div class="onboard" id="onboard">
+  <div class="onboard-inner">
+    <h1>Duet</h1>
+    <div class="tagline">Two tastes · One Watchlist</div>
+    <div class="choose">Who's watching?</div>
+    <div class="onboard-picks">
+      <div class="pcard his" onclick="chooseProfile('his')"><span>His</span></div>
+      <div class="pcard her" onclick="chooseProfile('her')"><span>Her</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ APP ═══════ -->
+<div id="app">
+
+  <header>
+    <div class="h-row">
+      <div class="logo">Duet</div>
+      <div class="profile-switch">
+        <div class="pill"></div>
+        <button id="pbtn-his" onclick="switchProfile('his')">His</button>
+        <button id="pbtn-her" onclick="switchProfile('her')">Her</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- DISCOVER -->
+    <section class="view active" id="view-discover">
+      <div class="deck-wrap">
+        <div class="deck" id="deck"></div>
+      </div>
+      <div class="actions" id="deckActions" style="display:none;">
+        <button class="action-btn pass" onclick="manualSwipe(-1)">✕</button>
+        <button class="action-btn info" onclick="showCardDetail()">ℹ</button>
+        <button class="action-btn like" onclick="manualSwipe(1)">♥</button>
+      </div>
+    </section>
+
+    <!-- MATCHES (both liked) -->
+    <section class="view" id="view-matches">
+      <div class="picks-wrap">
+        <div id="matchesContent"></div>
+      </div>
+    </section>
+
+    <!-- PARTNER'S PICKS -->
+    <section class="view" id="view-partner">
+      <div class="picks-wrap">
+        <div id="partnerContent"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="settings-wrap">
+        <div class="setup-card">
+          <h3>How it Works</h3>
+          <p style="margin-bottom:10px;">Swipe right to add to your list. Your likes appear on your partner's "Partner's Picks" tab. Shows you both swiped right on appear in "Matches".</p>
+          <p><strong>For cross-device sync</strong> (two phones), both devices must paste the same JSONBin key below. On one device, everything works automatically.</p>
+        </div>
+
+        <div class="sync-status">
+          <span class="sync-dot" id="syncDot"></span>
+          <span id="syncText">Local only</span>
+        </div>
+
+        <div class="sfield">
+          <label>Anthropic API Key (for recommendations)</label>
+          <input type="password" id="antKey" placeholder="sk-ant-...">
+          <div class="hint">Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+        </div>
+
+        <div class="sfield">
+          <label>TMDB API Key (for posters)</label>
+          <input type="password" id="tmdbKey" placeholder="Your TMDB v3 key">
+          <div class="hint">Get one at <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a></div>
+        </div>
+
+        <div class="sfield">
+          <label>Google Sheet URL (His Ratings)</label>
+          <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <div class="hint">In your Google Sheet: File → Share → Publish to web → CSV. Paste that link, or the regular sheet URL (will auto-convert). Expected columns: Title, Type, Year, Rating.</div>
+        </div>
+
+        <div class="sfield">
+          <label>JSONBin Master Key (optional, for 2-phone sync)</label>
+          <input type="password" id="binKey" placeholder="$2a$10$...">
+          <div class="hint">Free at <a href="https://jsonbin.io" target="_blank">jsonbin.io</a>. Account → API Keys → X-MASTER-KEY. Paste same key on both phones.</div>
+        </div>
+
+        <div class="sfield">
+          <label>JSONBin Bin ID (optional)</label>
+          <input type="text" id="binId" placeholder="Auto-created if empty">
+          <div class="hint">After setup click "Test Sync" — this auto-fills. Copy this ID to your partner's phone.</div>
+        </div>
+
+        <button class="sbtn" onclick="saveSettings()">Save</button>
+        <button class="sbtn ghost" onclick="testSync()" style="margin-top:10px;">Test Sync & Pull</button>
+        <button class="sbtn ghost" onclick="refreshRecs()" style="margin-top:10px;">Refresh Recommendations</button>
+        <button class="sbtn danger" onclick="resetAll()" style="margin-top:20px;">Reset Everything</button>
+
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); text-align:center; margin-top:30px;">
+          Duet v1.0 · Built with Claude
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom">
+    <button class="active" data-view="discover" onclick="showView('discover')">
+      <span class="ico">✦</span>
+      <span>Discover</span>
+    </button>
+    <button data-view="matches" onclick="showView('matches')">
+      <span class="ico">♥</span>
+      <span>Matches</span>
+      <span class="nav-badge" id="badge-matches">0</span>
+    </button>
+    <button data-view="partner" onclick="showView('partner')">
+      <span class="ico">◐</span>
+      <span>Partner</span>
+      <span class="nav-badge" id="badge-partner">0</span>
+    </button>
+    <button data-view="settings" onclick="showView('settings')">
+      <span class="ico">⚙</span>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════ */
+const State = {
+  profile: null,           // 'his' | 'her'
+  data: {
+    his: { liked: [], passed: [] },   // each item: {id,title,year,type,poster,overview,why,likedAt}
+    her: { liked: [], passed: [] },
+    seedWatched: []        // from Google Sheet (his history)
+  },
+  recs: [],                // current rec queue for active profile
+  topCard: null,
+  dragStart: null,
+  currentDrag: null,
+  syncBusy: false,
+};
+
+const LS = {
+  get:  (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set:  (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  getS: (k, d='') => localStorage.getItem(k) || d,
+  setS: (k, v) => localStorage.setItem(k, v),
+};
+
+/* ══════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════ */
+async function boot() {
+  // restore data
+  const saved = LS.get('duet_data', null);
+  if (saved) State.data = saved;
+
+  const p = LS.getS('duet_profile', '');
+  if (p === 'his' || p === 'her') {
+    document.getElementById('onboard').classList.add('hidden');
+    setProfile(p, false);
+  }
+
+  // restore settings to form
+  document.getElementById('antKey').value   = LS.getS('duet_ant', '');
+  document.getElementById('tmdbKey').value  = LS.getS('duet_tmdb', '');
+  document.getElementById('sheetUrl').value = LS.getS('duet_sheet', '');
+  document.getElementById('binKey').value   = LS.getS('duet_binkey', '');
+  document.getElementById('binId').value    = LS.getS('duet_binid', '');
+
+  updateSyncStatus();
+  await pullFromCloud();  // silent if no key
+
+  if (State.profile) {
+    await loadRecsIfNeeded();
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   PROFILE
+   ══════════════════════════════════════════════════════ */
+function chooseProfile(p) {
+  document.getElementById('onboard').classList.add('hidden');
+  setProfile(p, true);
+  setTimeout(() => loadRecsIfNeeded(), 100);
+}
+
+function switchProfile(p) {
+  if (State.profile === p) return;
+  setProfile(p, true);
+  renderDeck();
+  renderMatches();
+  renderPartner();
+}
+
+function setProfile(p, save=true) {
+  State.profile = p;
+  document.documentElement.setAttribute('data-profile', p);
+  document.getElementById('themeColor').setAttribute('content', p === 'his' ? '#0a0a0f' : '#faf6f0');
+  document.getElementById('pbtn-his').classList.toggle('active', p === 'his');
+  document.getElementById('pbtn-her').classList.toggle('active', p === 'her');
+  if (save) LS.setS('duet_profile', p);
+  updateBadges();
+}
+
+/* ══════════════════════════════════════════════════════
+   VIEWS
+   ══════════════════════════════════════════════════════ */
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('nav.bottom button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+
+  if (v === 'matches') renderMatches();
+  if (v === 'partner') renderPartner();
+  if (v === 'discover') renderDeck();
+}
+
+/* ══════════════════════════════════════════════════════
+   DATA PERSISTENCE
+   ══════════════════════════════════════════════════════ */
+function saveData() {
+  LS.set('duet_data', State.data);
+  // push to cloud (async, fire-and-forget)
+  pushToCloud();
+  updateBadges();
+}
+
+function updateBadges() {
+  if (!State.profile) return;
+  const partner = State.profile === 'his' ? 'her' : 'his';
+  const partnerLikes = State.data[partner].liked;
+  const myPassIds = new Set(State.data[State.profile].passed.map(x => x.id));
+  const myLikeIds = new Set(State.data[State.profile].liked.map(x => x.id));
+  // Partner tab: how many partner liked that I haven't interacted with
+  const unseen = partnerLikes.filter(x => !myPassIds.has(x.id) && !myLikeIds.has(x.id)).length;
+  const matches = State.data.his.liked.filter(h => State.data.her.liked.some(he => he.id === h.id)).length;
+
+  const pb = document.getElementById('badge-partner');
+  pb.textContent = unseen;
+  pb.classList.toggle('show', unseen > 0);
+
+  const mb = document.getElementById('badge-matches');
+  mb.textContent = matches;
+  mb.classList.toggle('show', matches > 0);
+}
+
+/* ══════════════════════════════════════════════════════
+   RECOMMENDATIONS (Claude API)
+   ══════════════════════════════════════════════════════ */
+async function loadRecsIfNeeded() {
+  const queueKey = 'duet_queue_' + State.profile;
+  const cached = LS.get(queueKey, null);
+  if (cached && cached.items && cached.items.length > 0 && cached.ts && (Date.now() - cached.ts < 6 * 60 * 60 * 1000)) {
+    State.recs = filterOutSeen(cached.items);
+    renderDeck();
+    if (State.recs.length < 5) await fetchRecs(); // top up
+    return;
+  }
+  await fetchRecs();
+}
+
+async function refreshRecs() {
+  LS.set('duet_queue_' + State.profile, null);
+  await fetchRecs();
+  showView('discover');
+  toast('Fresh recommendations loaded');
+}
+
+function filterOutSeen(items) {
+  const mine = State.data[State.profile];
+  const seen = new Set([
+    ...mine.liked.map(x => x.id),
+    ...mine.passed.map(x => x.id),
+    ...State.data.seedWatched.map(x => x.id),
+  ]);
+  return items.filter(x => !seen.has(x.id));
+}
+
+async function fetchRecs() {
+  const antKey = LS.getS('duet_ant', '');
+  if (!antKey) {
+    State.recs = [];
+    renderDeck();
+    toast('Add your Anthropic key in Settings');
+    return;
+  }
+
+  renderLoading();
+
+  // Build taste context
+  let watchedList;
+  if (State.profile === 'his') {
+    // Prefer Google Sheet data, fallback to liked items
+    watchedList = State.data.seedWatched.length > 0
+      ? State.data.seedWatched
+      : State.data.his.liked;
+  } else {
+    // For Her: blend her likes + what he liked that she might too
+    watchedList = [...State.data.her.liked, ...State.data.his.liked.slice(0, 20)];
+  }
+
+  const titlesSample = watchedList.slice(0, 60).map(w =>
+    `${w.title}${w.year ? ` (${w.year})` : ''}${w.rating ? ` [${w.rating}]` : ''}${w.type ? ` — ${w.type}` : ''}`
+  ).join('\n');
+
+  const excludeList = new Set([
+    ...State.data.seedWatched.map(x => (x.title || '').toLowerCase()),
+    ...State.data[State.profile].liked.map(x => (x.title || '').toLowerCase()),
+    ...State.data[State.profile].passed.map(x => (x.title || '').toLowerCase()),
+  ]);
+  const excludeSample = [...excludeList].slice(0, 120).join(', ');
+
+  const partnerLikes = State.profile === 'his' ? State.data.her.liked : State.data.his.liked;
+  const partnerSample = partnerLikes.slice(0, 15).map(x => x.title).join(', ');
+
+  const profileCtx = State.profile === 'his'
+    ? "You're recommending for the HIS profile. Lean toward his personal taste patterns."
+    : "You're recommending for the HER profile. Lean toward elegant, character-driven, emotionally resonant picks — but also consider crossover appeal with what HE has liked (listed below) so they can watch together.";
+
+  const prompt = `You are a cinema curator for a couple using a swipe-to-watch app.
+
+${profileCtx}
+
+KNOWN TASTE (watched / rated by this profile):
+${titlesSample || '(no history yet — suggest widely acclaimed crossover hits)'}
+
+PARTNER HAS RECENTLY LIKED: ${partnerSample || '(none yet)'}
+
+ABSOLUTELY DO NOT RECOMMEND (already seen/rated/swiped): ${excludeSample}
+
+Search the web for currently-streaming or recently-released movies and TV shows (2023–2026 preferred, but include classics they'd enjoy). Return 15 fresh recommendations matching their taste.
+
+Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
+{
+  "title": "string",
+  "year": "YYYY",
+  "type": "Movie" or "TV",
+  "overview": "one-sentence hook, max 20 words",
+  "why": "one sentence on why they'd love this given their taste, max 22 words",
+  "imdb": "X.X or empty string",
+  "platform": "Netflix/Prime/HBO/etc or empty"
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': antKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 3500,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('Claude error:', t);
+      toast('API error — check your key & credits');
+      State.recs = [];
+      renderDeck();
+      return;
+    }
+
+    const data = await res.json();
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text).join('\n');
+
+    const jsonStr = extractJson(text);
+    const items = JSON.parse(jsonStr);
+
+    // Enrich with TMDB posters
+    const enriched = await Promise.all(items.map(enrichWithPoster));
+    const unique = enriched.filter(Boolean).map(r => ({ ...r, id: r.tmdbId || slugify(r.title + '-' + (r.year || '')) }));
+
+    State.recs = filterOutSeen(unique);
+
+    LS.set('duet_queue_' + State.profile, { items: State.recs, ts: Date.now() });
+    renderDeck();
+  } catch (e) {
+    console.error(e);
+    toast('Couldn\'t fetch recs — see console');
+    State.recs = [];
+    renderDeck();
+  }
+}
+
+function extractJson(s) {
+  const m = s.match(/\[[\s\S]*\]/);
+  return m ? m[0] : '[]';
+}
+
+function slugify(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+async function enrichWithPoster(r) {
+  const key = LS.getS('duet_tmdb', '');
+  if (!key) return { ...r, poster: '' };
+  try {
+    const type = r.type === 'TV' ? 'tv' : 'movie';
+    const url = `https://api.themoviedb.org/3/search/${type}?api_key=${key}&query=${encodeURIComponent(r.title)}${r.year ? `&year=${r.year}` : ''}&language=en-US&page=1`;
+    const res = await fetch(url);
+    if (!res.ok) return { ...r, poster: '' };
+    const data = await res.json();
+    const first = (data.results || [])[0];
+    if (!first) return { ...r, poster: '' };
+    return {
+      ...r,
+      tmdbId: String(first.id),
+      poster: first.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : '',
+    };
+  } catch { return { ...r, poster: '' }; }
+}
+
+/* ══════════════════════════════════════════════════════
+   DECK RENDERING + SWIPE
+   ══════════════════════════════════════════════════════ */
+function renderLoading() {
+  const deck = document.getElementById('deck');
+  deck.innerHTML = `<div class="loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div class="spinner"></div><div>Curating for you…</div></div>`;
+  document.getElementById('deckActions').style.display = 'none';
+}
+
+function renderDeck() {
+  const deck = document.getElementById('deck');
+  const actions = document.getElementById('deckActions');
+
+  if (!State.recs || State.recs.length === 0) {
+    deck.innerHTML = `
+      <div class="empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <h3>All caught up</h3>
+        <p>You've burned through the deck. Time for a fresh batch.</p>
+        <button onclick="refreshRecs()">Refresh Deck</button>
+      </div>`;
+    actions.style.display = 'none';
+    return;
+  }
+
+  // Render top 3 cards stacked
+  const top = State.recs.slice(0, 3);
+  deck.innerHTML = top.map((r, idx) => cardHTML(r, idx)).reverse().join('');
+  actions.style.display = 'flex';
+
+  // attach drag to top card
+  const topEl = deck.children[deck.children.length - 1];
+  if (topEl) attachDrag(topEl);
+}
+
+function cardHTML(r, idx) {
+  const scale = 1 - (idx * 0.04);
+  const translateY = idx * 8;
+  const opacity = idx === 0 ? 1 : 0.7;
+  const z = 10 - idx;
+
+  const posterSrc = r.poster
+    ? `<img class="poster" src="${escapeHtml(r.poster)}" alt="">`
+    : `<div class="placeholder">${r.type === 'TV' ? '📺' : '🎬'}</div>`;
+
+  const metaBits = [];
+  if (r.type) metaBits.push(r.type.toUpperCase());
+  if (r.year) metaBits.push(r.year);
+  if (r.platform) metaBits.push(r.platform);
+
+  const ratingBit = r.imdb
+    ? `<span class="rating-pill">★ ${escapeHtml(r.imdb)}</span>`
+    : '';
+
+  return `
+    <div class="card" data-id="${escapeHtml(r.id)}"
+         style="transform: translateY(${translateY}px) scale(${scale}); opacity: ${opacity}; z-index: ${z};">
+      <div class="swipe-label like">Like</div>
+      <div class="swipe-label nope">Pass</div>
+      ${posterSrc}
+      <div class="card-info">
+        <div class="card-title">${escapeHtml(r.title)}</div>
+        <div class="card-meta">
+          ${metaBits.map(b => `<span>${escapeHtml(b)}</span>`).join('<span class="dot">·</span>')}
+          ${ratingBit}
+        </div>
+        <div class="card-why">${escapeHtml(r.why || r.overview || '')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function attachDrag(el) {
+  let startX = 0, startY = 0, dx = 0, dy = 0;
+  let pointerActive = false;
+
+  const onStart = (e) => {
+    pointerActive = true;
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    el.classList.add('dragging');
+  };
+  const onMove = (e) => {
+    if (!pointerActive) return;
+    const p = e.touches ? e.touches[0] : e;
+    dx = p.clientX - startX;
+    dy = p.clientY - startY;
+    const rot = dx * 0.08;
+    el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+
+    // show swipe labels
+    const likeEl = el.querySelector('.swipe-label.like');
+    const nopeEl = el.querySelector('.swipe-label.nope');
+    if (likeEl) likeEl.style.opacity = Math.max(0, Math.min(1, dx / 80));
+    if (nopeEl) nopeEl.style.opacity = Math.max(0, Math.min(1, -dx / 80));
+
+    if (e.cancelable) e.preventDefault();
+  };
+  const onEnd = () => {
+    if (!pointerActive) return;
+    pointerActive = false;
+    el.classList.remove('dragging');
+
+    const threshold = 90;
+    if (dx > threshold) {
+      finishSwipe(el, 1);
+    } else if (dx < -threshold) {
+      finishSwipe(el, -1);
+    } else {
+      el.style.transform = '';
+      const likeEl = el.querySelector('.swipe-label.like');
+      const nopeEl = el.querySelector('.swipe-label.nope');
+      if (likeEl) likeEl.style.opacity = 0;
+      if (nopeEl) nopeEl.style.opacity = 0;
+    }
+    dx = 0; dy = 0;
+  };
+
+  el.addEventListener('touchstart', onStart, { passive: true });
+  el.addEventListener('touchmove', onMove, { passive: false });
+  el.addEventListener('touchend', onEnd);
+  el.addEventListener('touchcancel', onEnd);
+  el.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+}
+
+function manualSwipe(dir) {
+  const deck = document.getElementById('deck');
+  const topEl = deck.children[deck.children.length - 1];
+  if (!topEl) return;
+  finishSwipe(topEl, dir);
+}
+
+function finishSwipe(el, dir) {
+  const id = el.dataset.id;
+  const rec = State.recs.find(r => r.id === id);
+  if (!rec) return;
+
+  el.classList.add('gone');
+  const offX = dir > 0 ? window.innerWidth + 100 : -window.innerWidth - 100;
+  const rot = dir > 0 ? 30 : -30;
+  el.style.transform = `translate(${offX}px, -50px) rotate(${rot}deg)`;
+  el.style.opacity = '0';
+
+  // record
+  const item = {
+    id: rec.id, title: rec.title, year: rec.year, type: rec.type,
+    poster: rec.poster, overview: rec.overview, why: rec.why,
+    platform: rec.platform, imdb: rec.imdb,
+    at: Date.now()
+  };
+  if (dir > 0) {
+    State.data[State.profile].liked.unshift(item);
+    toast(`♥ Added to your list`);
+  } else {
+    State.data[State.profile].passed.unshift(item);
+  }
+  saveData();
+
+  // Remove from queue
+  State.recs = State.recs.filter(r => r.id !== id);
+  LS.set('duet_queue_' + State.profile, { items: State.recs, ts: Date.now() });
+
+  setTimeout(() => {
+    renderDeck();
+    if (State.recs.length < 4) fetchRecs(); // background top-up
+  }, 350);
+}
+
+function showCardDetail() {
+  const deck = document.getElementById('deck');
+  const topEl = deck.children[deck.children.length - 1];
+  if (!topEl) return;
+  const id = topEl.dataset.id;
+  const rec = State.recs.find(r => r.id === id);
+  if (!rec) return;
+  alert(`${rec.title} (${rec.year})\n\n${rec.overview || ''}\n\nWhy: ${rec.why || ''}${rec.platform ? '\n\nOn: ' + rec.platform : ''}${rec.imdb ? '\nIMDb: ' + rec.imdb : ''}`);
+}
+
+/* ══════════════════════════════════════════════════════
+   MATCHES + PARTNER VIEWS
+   ══════════════════════════════════════════════════════ */
+function renderMatches() {
+  const el = document.getElementById('matchesContent');
+  const hisL = State.data.his.liked;
+  const herL = State.data.her.liked;
+  const both = hisL.filter(h => herL.some(he => he.id === h.id));
+
+  if (both.length === 0) {
+    el.innerHTML = `<div class="empty" style="padding-top:60px;"><h3>No matches yet</h3><p>When you BOTH swipe right on the same title, it appears here — your shared watchlist.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="section-title">Both of You Loved (${both.length})</div>
+    <div class="grid">
+      ${both.map(pickHTML).join('')}
+    </div>
+  `;
+}
+
+function renderPartner() {
+  const el = document.getElementById('partnerContent');
+  if (!State.profile) { el.innerHTML = ''; return; }
+  const partnerKey = State.profile === 'his' ? 'her' : 'his';
+  const partnerName = partnerKey === 'his' ? 'His' : 'Her';
+  const myKey = State.profile;
+  const myLikeIds = new Set(State.data[myKey].liked.map(x => x.id));
+  const myPassIds = new Set(State.data[myKey].passed.map(x => x.id));
+
+  const theirLikes = State.data[partnerKey].liked;
+  const newPicks = theirLikes.filter(x => !myLikeIds.has(x.id) && !myPassIds.has(x.id));
+  const alreadyMatched = theirLikes.filter(x => myLikeIds.has(x.id));
+
+  if (theirLikes.length === 0) {
+    el.innerHTML = `<div class="empty" style="padding-top:60px;"><h3>Nothing yet from ${partnerName}</h3><p>When ${partnerName} swipes right on something, their picks show up here for you to weigh in on.</p></div>`;
+    return;
+  }
+
+  const sections = [];
+  if (newPicks.length > 0) {
+    sections.push(`
+      <div class="section-title">${partnerName} liked — swipe back? (${newPicks.length})</div>
+      <div class="grid">
+        ${newPicks.map(x => pickHTML(x, true)).join('')}
+      </div>
+    `);
+  }
+  if (alreadyMatched.length > 0) {
+    sections.push(`
+      <div class="section-title">You both liked (${alreadyMatched.length})</div>
+      <div class="grid">
+        ${alreadyMatched.map(pickHTML).join('')}
+      </div>
+    `);
+  }
+  el.innerHTML = sections.join('');
+}
+
+function pickHTML(x, actionable=false) {
+  const poster = x.poster
+    ? `<img src="${escapeHtml(x.poster)}" alt="" loading="lazy">`
+    : `<div class="pick-empty-poster">${x.type === 'TV' ? '📺' : '🎬'}</div>`;
+  const badge = actionable ? `<div class="pick-badge" onclick="quickLike('${escapeHtml(x.id)}')">+</div>` : '';
+  return `
+    <div class="pick">
+      ${poster}
+      <div class="pick-label">${escapeHtml(x.title)}</div>
+      ${badge}
+    </div>
+  `;
+}
+
+function quickLike(id) {
+  // add to my likes from partner view
+  const partnerKey = State.profile === 'his' ? 'her' : 'his';
+  const item = State.data[partnerKey].liked.find(x => x.id === id);
+  if (!item) return;
+  if (!State.data[State.profile].liked.some(x => x.id === id)) {
+    State.data[State.profile].liked.unshift({ ...item, at: Date.now() });
+    saveData();
+    renderPartner();
+    renderMatches();
+    toast('Added to matches ♥');
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   GOOGLE SHEET IMPORT (His watched history)
+   ══════════════════════════════════════════════════════ */
+async function importSheet() {
+  const url = LS.getS('duet_sheet', '');
+  if (!url) return;
+  const csvUrl = normalizeSheetUrl(url);
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('Sheet fetch failed');
+    const csv = await res.text();
+    const rows = parseCSV(csv);
+    if (rows.length < 2) throw new Error('Empty sheet');
+
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const titleIdx = headers.findIndex(h => h.includes('title') || h.includes('name'));
+    const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('category') || h.includes('format'));
+    const yearIdx = headers.findIndex(h => h.includes('year'));
+    const ratingIdx = headers.findIndex(h => h.includes('rating') || h.includes('score') || h.includes('stars'));
+
+    const seeded = rows.slice(1)
+      .filter(r => r[titleIdx])
+      .map(r => ({
+        id: slugify((r[titleIdx] || '') + '-' + (r[yearIdx] || '')),
+        title: (r[titleIdx] || '').trim(),
+        type: (r[typeIdx] || '').trim() || 'Movie',
+        year: (r[yearIdx] || '').trim(),
+        rating: (r[ratingIdx] || '').trim(),
+      }));
+
+    State.data.seedWatched = seeded;
+    saveData();
+    return seeded.length;
+  } catch (e) {
+    console.error('Sheet import failed:', e);
+    throw e;
+  }
+}
+
+function normalizeSheetUrl(url) {
+  // if already CSV export url, use as-is
+  if (url.includes('output=csv') || url.includes('format=csv')) return url;
+  // convert regular sheets url to CSV export
+  const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) {
+    const gid = (url.match(/gid=(\d+)/) || [])[1] || '0';
+    return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
+  }
+  return url;
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cur = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { cur.push(field); field = ''; }
+      else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; }
+      else if (c === '\r') {}
+      else field += c;
+    }
+  }
+  if (field.length > 0 || cur.length > 0) { cur.push(field); rows.push(cur); }
+  return rows;
+}
+
+/* ══════════════════════════════════════════════════════
+   JSONBIN CLOUD SYNC
+   ══════════════════════════════════════════════════════ */
+async function createBin() {
+  const key = LS.getS('duet_binkey', '');
+  if (!key) return null;
+  const res = await fetch('https://api.jsonbin.io/v3/b', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': key,
+      'X-Bin-Name': 'duet-watchlist',
+      'X-Bin-Private': 'true',
+    },
+    body: JSON.stringify(State.data),
+  });
+  if (!res.ok) return null;
+  const j = await res.json();
+  const id = j.metadata?.id;
+  if (id) {
+    LS.setS('duet_binid', id);
+    document.getElementById('binId').value = id;
+  }
+  return id;
+}
+
+async function pullFromCloud() {
+  const key = LS.getS('duet_binkey', '');
+  const id  = LS.getS('duet_binid', '');
+  if (!key || !id) return;
+
+  setSyncStatus('busy', 'Syncing…');
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${id}/latest`, {
+      headers: { 'X-Master-Key': key },
+    });
+    if (!res.ok) {
+      setSyncStatus('err', 'Sync failed');
+      return;
+    }
+    const j = await res.json();
+    const remote = j.record;
+    if (remote && remote.his && remote.her) {
+      // merge strategy: union of likes/passes by id, newest wins
+      State.data = mergeData(State.data, remote);
+      LS.set('duet_data', State.data);
+      updateBadges();
+      setSyncStatus('ok', 'Synced');
+    } else {
+      setSyncStatus('ok', 'Connected (empty)');
+    }
+  } catch {
+    setSyncStatus('err', 'Sync failed');
+  }
+}
+
+async function pushToCloud() {
+  const key = LS.getS('duet_binkey', '');
+  let id  = LS.getS('duet_binid', '');
+  if (!key) return;
+  if (State.syncBusy) return;
+  State.syncBusy = true;
+
+  try {
+    if (!id) {
+      id = await createBin();
+      if (!id) { State.syncBusy = false; return; }
+    }
+    setSyncStatus('busy', 'Syncing…');
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
+      body: JSON.stringify(State.data),
+    });
+    setSyncStatus(res.ok ? 'ok' : 'err', res.ok ? 'Synced' : 'Sync failed');
+  } catch {
+    setSyncStatus('err', 'Sync failed');
+  }
+  State.syncBusy = false;
+}
+
+function mergeData(a, b) {
+  const mergeList = (la, lb) => {
+    const map = new Map();
+    [...la, ...lb].forEach(x => {
+      const existing = map.get(x.id);
+      if (!existing || (x.at || 0) > (existing.at || 0)) map.set(x.id, x);
+    });
+    return [...map.values()].sort((x, y) => (y.at || 0) - (x.at || 0));
+  };
+  return {
+    his: {
+      liked: mergeList(a.his?.liked || [], b.his?.liked || []),
+      passed: mergeList(a.his?.passed || [], b.his?.passed || []),
+    },
+    her: {
+      liked: mergeList(a.her?.liked || [], b.her?.liked || []),
+      passed: mergeList(a.her?.passed || [], b.her?.passed || []),
+    },
+    seedWatched: (a.seedWatched?.length || 0) >= (b.seedWatched?.length || 0)
+      ? (a.seedWatched || []) : (b.seedWatched || []),
+  };
+}
+
+function setSyncStatus(kind, text) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot ' + kind;
+  txt.textContent = text;
+}
+
+function updateSyncStatus() {
+  const key = LS.getS('duet_binkey', '');
+  const id = LS.getS('duet_binid', '');
+  if (!key) setSyncStatus('', 'Local only (no cloud sync)');
+  else if (!id) setSyncStatus('', 'Key set, bin not created yet');
+  else setSyncStatus('ok', 'Cloud sync ready');
+}
+
+async function testSync() {
+  const key = LS.getS('duet_binkey', '');
+  if (!key) { toast('Paste your JSONBin key first'); return; }
+  const id = LS.getS('duet_binid', '');
+  if (!id) {
+    const newId = await createBin();
+    if (newId) { toast('Bin created ✓ Copy the ID to your partner'); updateSyncStatus(); }
+    else toast('Couldn\'t create bin — check key');
+  } else {
+    await pullFromCloud();
+    toast('Pulled latest from cloud');
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SETTINGS
+   ══════════════════════════════════════════════════════ */
+async function saveSettings() {
+  LS.setS('duet_ant',    document.getElementById('antKey').value.trim());
+  LS.setS('duet_tmdb',   document.getElementById('tmdbKey').value.trim());
+  LS.setS('duet_sheet',  document.getElementById('sheetUrl').value.trim());
+  LS.setS('duet_binkey', document.getElementById('binKey').value.trim());
+  LS.setS('duet_binid',  document.getElementById('binId').value.trim());
+
+  updateSyncStatus();
+
+  // Import sheet
+  if (LS.getS('duet_sheet', '')) {
+    try {
+      const n = await importSheet();
+      toast(`Imported ${n} titles from sheet ✓`);
+    } catch {
+      toast('Sheet import failed — check URL & "Anyone with link" sharing');
+    }
+  } else {
+    toast('Saved');
+  }
+
+  // Refresh recs if we have Anthropic key now
+  if (LS.getS('duet_ant', '')) {
+    LS.set('duet_queue_his', null);
+    LS.set('duet_queue_her', null);
+    if (State.profile) await loadRecsIfNeeded();
+  }
+}
+
+function resetAll() {
+  if (!confirm('Erase all likes, passes, and settings on THIS device? (Cloud data is not affected.)')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+/* ══════════════════════════════════════════════════════
+   UTIL
+   ══════════════════════════════════════════════════════ */
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// Prevent iOS Safari pull-to-refresh & over-scroll
+document.addEventListener('touchmove', (e) => {
+  if (e.target.closest('.picks-wrap, .settings-wrap')) return;
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

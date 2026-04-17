@@ -1,0 +1,198 @@
+══════════════════════════════════════════════════════════
+  DUET — His & Her Cinema  ·  GITHUB PAGES SETUP
+══════════════════════════════════════════════════════════
+
+YOUR LIVE URL WILL BE:
+  https://rishihjoshi.github.io/EntertainmentRecommedationEngine/
+
+══════════════════════════════════════════════════════════
+  STEP 1 — UPLOAD TO GITHUB (2 minutes)
+══════════════════════════════════════════════════════════
+
+1. Go to your empty repo:
+   https://github.com/rishihjoshi/EntertainmentRecommedationEngine
+
+2. You'll see "This repository is empty"
+   Click: "uploading an existing file"
+   (or "Add file" → "Upload files")
+
+3. Drag these 4 files into the upload area:
+     · index.html
+     · manifest.json
+     · sw.js
+     · SETUP.txt   (optional)
+
+4. Scroll down → "Commit changes" → green button
+
+   Your files are now in the repo.
+
+══════════════════════════════════════════════════════════
+  STEP 2 — TURN ON GITHUB PAGES (30 seconds)
+══════════════════════════════════════════════════════════
+
+1. In your repo → "Settings" tab (top right)
+2. Left sidebar → "Pages"
+3. Under "Build and deployment":
+     · Source: "Deploy from a branch"
+     · Branch: "main"  /  folder: "/ (root)"
+     · Click "Save"
+
+4. Wait 30-60 seconds, refresh the page
+   You'll see:
+     "Your site is live at
+      https://rishihjoshi.github.io/EntertainmentRecommedationEngine/"
+
+══════════════════════════════════════════════════════════
+  STEP 3 — INSTALL ON iPHONE
+══════════════════════════════════════════════════════════
+
+1. Open your live URL in Safari on your iPhone
+2. Tap the Share button (box with arrow pointing up)
+3. Scroll down → "Add to Home Screen"
+4. Tap "Add"
+
+The Duet icon appears on your home screen.
+Tap it → launches full-screen like a native app.
+
+Repeat on your partner's phone.
+
+══════════════════════════════════════════════════════════
+  STEP 4 — CONFIGURE APP
+══════════════════════════════════════════════════════════
+
+On first launch, pick your profile (His / Her).
+Then tap the Settings tab (bottom right gear icon).
+
+Paste these (add what you have now, the rest later):
+
+  1. ANTHROPIC API KEY   (required — drives recommendations)
+     Get it: https://console.anthropic.com
+     Starts with: sk-ant-
+
+  2. TMDB API KEY        (required — for movie posters)
+     Get it: https://www.themoviedb.org/settings/api
+     Free. Use the v3 "API Key"
+
+  3. GOOGLE SHEET URL    (for HIS watched history)
+     Paste your regular sheet URL.
+     Sharing must be "Anyone with the link → Viewer".
+     Sheet columns (any order): Title, Type, Year, Rating
+
+  4. JSONBIN MASTER KEY  (optional — only for 2-phone sync)
+     Free at https://jsonbin.io
+     Sign up → API Keys → copy X-MASTER-KEY
+     Then tap "Test Sync & Pull" — auto-creates a bin.
+
+Tap Save.
+
+══════════════════════════════════════════════════════════
+  2-PHONE SETUP (PARTNER'S PHONE)
+══════════════════════════════════════════════════════════
+
+After setup on Phone 1:
+  · Go to Settings → copy the JSONBin MASTER KEY
+    and the BIN ID (it auto-filled after Test Sync)
+  · Install the app on Phone 2 (same URL, Add to Home Screen)
+  · In Phone 2 Settings: paste the SAME key + bin ID
+  · Tap "Test Sync & Pull"
+
+Now both phones share likes in real time:
+  · Every right-swipe pushes to cloud in ~2 seconds
+  · Every app open pulls the latest
+  · Matches (both swiped right) appear on both phones
+
+Without JSONBin, everything still works on ONE device
+(toggle His/Her with the pill in the top header).
+
+══════════════════════════════════════════════════════════
+  HOW IT WORKS
+══════════════════════════════════════════════════════════
+
+DISCOVER TAB
+  Swipe right ♥ = like (adds to your list)
+  Swipe left  ✕ = pass (never shown again)
+  Or tap the circular buttons at the bottom.
+
+MATCHES TAB
+  Shows titles you BOTH swiped right on — your
+  shared watch-together list.
+
+PARTNER TAB
+  Shows what your partner just liked.
+  Tap the "+" on a card to instantly add it to your
+  list (creates a match immediately).
+
+SETTINGS TAB
+  API keys, sheet URL, sync status, refresh recs, reset.
+
+══════════════════════════════════════════════════════════
+  RECOMMENDATION LOGIC
+══════════════════════════════════════════════════════════
+
+For HIS profile:
+  · Google Sheet is the taste baseline
+  · Excludes anything already in the sheet
+  · Also excludes anything already swiped
+  · Considers HER recent likes for crossover picks
+
+For HER profile:
+  · Her own likes are the baseline
+  · Blended with HIS likes for co-watch appeal
+  · Same exclusion rules
+
+Claude searches the live web on each refresh, so
+recs stay current with 2025/2026 releases.
+
+══════════════════════════════════════════════════════════
+  UPDATING THE APP LATER
+══════════════════════════════════════════════════════════
+
+Just edit any file directly on GitHub:
+  · Click the file → pencil icon → edit → commit
+  · GitHub Pages rebuilds in ~30 seconds
+  · Refresh your phone — new version live
+
+══════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+══════════════════════════════════════════════════════════
+
+"Your site is live at..." never appears
+  → Wait 2 full minutes after enabling Pages
+  → Check Source is "Deploy from a branch" → main
+
+Live URL shows 404
+  → index.html must be at the REPO ROOT,
+    not inside a folder
+  → Check filename is lowercase: index.html
+
+Blank page / posters missing
+  → Open the live URL → Settings → paste TMDB key
+
+"API error — check your key & credits"
+  → Verify Anthropic key starts with sk-ant-
+  → Check credits at console.anthropic.com
+
+Partner's swipes not appearing
+  → Both phones need the SAME JSONBin Master Key
+    AND the SAME Bin ID
+  → Tap "Test Sync & Pull" in Settings on both
+  → Wait ~3 seconds after partner swipes
+
+App icon doesn't stick / opens in Safari
+  → Must use Safari on iPhone (not Chrome) to
+    "Add to Home Screen" properly
+  → Must be served over HTTPS (GitHub Pages is)
+
+══════════════════════════════════════════════════════════
+  PRIVACY
+══════════════════════════════════════════════════════════
+
+  · All data stays in your browser (localStorage) and
+    your private JSONBin (if you use it)
+  · API keys never sent anywhere except their own
+    services (Anthropic, TMDB, JSONBin)
+  · No analytics, no tracking, no ads
+
+══════════════════════════════════════════════════════════
+  Duet v1.0 — Built with Claude + TMDB + JSONBin
+══════════════════════════════════════════════════════════
