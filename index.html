@@ -1046,8 +1046,10 @@ function pickMood(id) {
   State.mood = id;
   LS.setS('duet_mood', id);
   renderFilters();
-  // Clear stale queue and refetch with new filter
-  LS.set('duet_queue_' + State.profile, null);
+  // Reset deck, clear cache for new combo, show loading immediately
+  State.recs = [];
+  LS.set(makeQueueKey(), null);
+  renderLoading();
   fetchRecs();
 }
 
@@ -1056,7 +1058,9 @@ function pickLang(id) {
   State.lang = id;
   LS.setS('duet_lang', id);
   renderFilters();
-  LS.set('duet_queue_' + State.profile, null);
+  State.recs = [];
+  LS.set(makeQueueKey(), null);
+  renderLoading();
   fetchRecs();
 }
 
@@ -1218,8 +1222,21 @@ async function fetchRecs() {
   if (lang.id === 'any') {
     // "any" means preference order: Gujarati → Hindi → English
     langDirective = `\n\nLANGUAGE PREFERENCE: Prioritize this language order in the deck: FIRST Gujarati content (Gujarati films, Gujarati web series, Gujarati regional content — include 4-5 if well-matched), THEN Hindi content (Bollywood, Hindi web series — 5-6 picks), THEN English (Hollywood, English-language international — 4-5 picks). The deck should feel diverse across languages but weighted toward Gujarati-first.`;
+  } else if (lang.id === 'hi') {
+    langDirective = `\n\n🚨 LANGUAGE FILTER — ABSOLUTELY STRICT: Recommend ONLY Hindi-language movies and TV shows. The original_language MUST be Hindi. This means Bollywood films and Hindi web series/originals on Netflix India, Amazon Prime India, JioCinema, SonyLIV, Hotstar, Disney+ Hotstar. 
+DO NOT include: Gujarati films (Kutch Express, Hellaro, Chhello Divas — these are Gujarati, NOT Hindi), Tamil, Telugu, Malayalam, Punjabi, Marathi, Bengali, or any English content.
+Examples of CORRECT Hindi picks: Laapataa Ladies, 12th Fail, Jawan, Pathaan, Mirzapur, Sacred Games, Delhi Crime, The Family Man, Panchayat, Kota Factory, Scam 1992, Paatal Lok, Rocket Boys, Heeramandi, Maamla Legal Hai, Killer Soup.
+Every single recommendation MUST be primarily in Hindi language.`;
+  } else if (lang.id === 'gu') {
+    langDirective = `\n\n🚨 LANGUAGE FILTER — ABSOLUTELY STRICT: Recommend ONLY Gujarati-language movies and web content. The original_language MUST be Gujarati.
+DO NOT include: Hindi/Bollywood films, English, or any other language even if they have Gujarati characters or themes.
+Examples of CORRECT Gujarati picks: Kutch Express, Hellaro, Chhello Divas, Bey Yaar, Gujjubhai, Vash, Fakt Mahilao Mate, 21mu Tiffin, Kamthaan, Golkeri, Montu Ni Bittu, Chaal Jeevi Laiye, Ventilator (Gujarati), Shu Thayu.
+Every recommendation MUST be primarily in Gujarati. If you genuinely cannot find 15 matching items, return fewer — do NOT pad with Hindi or English content.`;
+  } else if (lang.id === 'en') {
+    langDirective = `\n\n🚨 LANGUAGE FILTER — ABSOLUTELY STRICT: Recommend ONLY English-language movies and TV shows. The original_language MUST be English.
+This includes Hollywood, British, Australian, Canadian productions. DO NOT include Hindi, Gujarati, or any other language content even if it's popular in India.`;
   } else {
-    langDirective = `\n\nLANGUAGE FILTER (STRICT): ${lang.promptHint} Every recommendation MUST be primarily in this language. Do not include content in other languages.`;
+    langDirective = `\n\nLANGUAGE FILTER (STRICT): ${lang.promptHint}`;
   }
 
   const prompt = `You are a cinema curator for a couple using a swipe-to-watch app. The user lives in a multilingual Indian household — they watch Gujarati, Hindi, and English content.
@@ -1233,9 +1250,9 @@ PARTNER HAS RECENTLY LIKED: ${partnerSample || '(none yet)'}
 
 ABSOLUTELY DO NOT RECOMMEND (already seen/rated/swiped): ${excludeSample}
 
-Search the web for currently-streaming or recently-released movies and TV shows (2023–2026 preferred, but include acclaimed classics they'd enjoy). Return 15 fresh recommendations matching their taste AND respecting the mood + language filters above.
+Search the web for currently-streaming or recently-released movies and TV shows (2023–2026 preferred, but include acclaimed classics they'd enjoy). Return up to 15 fresh recommendations matching their taste AND respecting the mood + language filters above. If the language filter severely restricts options, returning fewer high-quality picks is better than padding with wrong-language content.
 
-IMPORTANT: Always use the most widely-recognized English spelling of titles (as they appear on IMDb/TMDB) so poster lookups work. For example: "Kutch Express" not "કચ્છ એક્સપ્રેસ", "Laapataa Ladies" not "लापता लेडीज़".
+IMPORTANT: Always use the most widely-recognized English/romanized spelling of titles (as they appear on IMDb/TMDB) so poster lookups work. For example: "Kutch Express" not "કચ્છ એક્સપ્રેસ", "Laapataa Ladies" not "लापता लेडीज़".
 
 Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
 {
@@ -1283,9 +1300,26 @@ Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
     const jsonStr = extractJson(text);
     const items = JSON.parse(jsonStr);
 
-    // Enrich with TMDB posters
+    // Enrich with TMDB posters (TMDB also tells us the REAL original language)
     const enriched = await Promise.all(items.map(enrichWithPoster));
-    const unique = enriched.filter(Boolean).map(r => ({ ...r, id: r.tmdbId || slugify(r.title + '-' + (r.year || '')) }));
+    let unique = enriched.filter(Boolean).map(r => ({ ...r, id: r.tmdbId || slugify(r.title + '-' + (r.year || '')) }));
+
+    // STRICT language enforcement — if user picked a specific language, drop anything that doesn't match
+    if (State.lang !== 'any') {
+      const wanted = State.lang; // 'gu' | 'hi' | 'en'
+      const wantedLabels = { gu: ['gujarati'], hi: ['hindi'], en: ['english'] };
+      const labels = wantedLabels[wanted] || [];
+      unique = unique.filter(r => {
+        // Prefer TMDB's verified original_language (2-letter code)
+        if (r.tmdbLang) return r.tmdbLang === wanted;
+        // Fallback to Claude's language field
+        const claimed = String(r.language || '').toLowerCase();
+        return labels.some(lbl => claimed.includes(lbl));
+      });
+      if (unique.length === 0) {
+        console.warn(`No ${wanted} items matched after strict filter.`);
+      }
+    }
 
     State.recs = filterOutSeen(unique);
 
@@ -1335,6 +1369,7 @@ async function enrichWithPoster(r) {
     return {
       ...r,
       tmdbId: String(first.id),
+      tmdbLang: first.original_language || '',  // 'gu', 'hi', 'en' — TMDB's verified code
       poster: first.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : '',
     };
   } catch (e) { console.warn('TMDB lookup failed for', r.title, e); return { ...r, poster: '' }; }
@@ -1381,10 +1416,24 @@ function renderDeck() {
 
   if (!State.recs || State.recs.length === 0) {
     deck.classList.add('is-empty');
+
+    const hasFilters = State.mood !== 'any' || State.lang !== 'any';
+    const langLabel = (LANGS.find(l => l.id === State.lang) || {}).label || '';
+    const moodLabel = (MOODS.find(m => m.id === State.mood) || {}).label || '';
+    const filterSummary = [
+      State.mood !== 'any' ? moodLabel : null,
+      State.lang !== 'any' ? langLabel : null,
+    ].filter(Boolean).join(' · ');
+
+    const heading = hasFilters ? 'No matches yet' : 'All caught up';
+    const body = hasFilters
+      ? `We couldn't find recommendations for <b>${escapeHtml(filterSummary)}</b> that you haven't already seen. Try a different combination, or hit refresh to search again.`
+      : `You've burned through the deck. Time for a fresh batch.`;
+
     deck.innerHTML = `
       <div class="empty">
-        <h3>All caught up</h3>
-        <p>You've burned through the deck. Time for a fresh batch.</p>
+        <h3>${heading}</h3>
+        <p>${body}</p>
         <button onclick="refreshRecs()">Refresh Deck</button>
       </div>`;
     actions.style.display = 'none';
