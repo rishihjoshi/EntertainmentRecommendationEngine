@@ -180,7 +180,54 @@
     .view.active { display: flex; }
 
     /* ═══════ DISCOVER / SWIPE DECK ═══════ */
-    #view-discover { padding: 14px 14px 0; }
+    #view-discover { padding: 8px 14px calc(var(--nav-h) + var(--safe-b)); }
+
+    /* filter pills */
+    .filter-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 4px 0 8px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px 2px;
+      scroll-padding: 4px;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    html[data-profile="her"] .chip {
+      font-weight: 500;
+      letter-spacing: 0.12em;
+    }
+    .chip:active { transform: scale(0.94); }
+    .chip.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    html[data-profile="her"] .chip.active { color: #fff; }
 
     .deck-wrap {
       flex: 1;
@@ -194,7 +241,17 @@
       width: 100%;
       max-width: 380px;
       aspect-ratio: 2 / 3.1;
-      max-height: calc(100% - 20px);
+      max-height: 100%;
+    }
+
+    /* When empty, deck shouldn't reserve aspect-ratio space */
+    .deck:empty,
+    .deck.is-empty {
+      aspect-ratio: auto;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .card {
@@ -333,17 +390,18 @@
     /* empty state */
     .empty {
       text-align: center;
-      padding: 40px 24px;
+      padding: 24px 24px;
       color: var(--text-dim);
+      width: 100%;
     }
     .empty h3 {
       font-family: var(--font-display);
-      font-size: 26px;
+      font-size: 28px;
       color: var(--text);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       font-weight: 600;
     }
-    .empty p { margin-bottom: 20px; line-height: 1.6; }
+    .empty p { margin-bottom: 24px; line-height: 1.6; font-size: 16px; }
     .empty button {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: #fff;
@@ -774,6 +832,10 @@
   <main>
     <!-- DISCOVER -->
     <section class="view active" id="view-discover">
+      <div class="filter-bar">
+        <div class="filter-row" id="moodRow"></div>
+        <div class="filter-row" id="langRow"></div>
+      </div>
       <div class="deck-wrap">
         <div class="deck" id="deck"></div>
       </div>
@@ -820,8 +882,9 @@
 
         <div class="sfield">
           <label>TMDB API Key (for posters)</label>
-          <input type="password" id="tmdbKey" placeholder="Your TMDB v3 key">
-          <div class="hint">Get one at <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a></div>
+          <input type="password" id="tmdbKey" placeholder="TMDB v3 API Key or v4 Bearer token">
+          <div class="hint">Get one at <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a>. Both v3 (short) and v4 (long eyJ...) formats work.</div>
+          <button class="sbtn ghost" onclick="tmdbTest()" style="margin-top:8px; padding: 8px 14px; font-size: 11px;">Test TMDB Connection</button>
         </div>
 
         <div class="sfield">
@@ -894,7 +957,31 @@ const State = {
   dragStart: null,
   currentDrag: null,
   syncBusy: false,
+  mood: 'any',             // 'any' | 'comedy' | 'thriller' | 'romcom' | ...
+  lang: 'any',             // 'any' | 'gu' | 'hi' | 'en'
 };
+
+const MOODS = [
+  { id: 'any',       label: 'Any Mood',   promptHint: '' },
+  { id: 'comedy',    label: 'Comedy',     promptHint: 'Comedies — laugh-out-loud, witty, funny.' },
+  { id: 'thriller',  label: 'Thriller',   promptHint: 'Thrillers — suspenseful, gripping, edge-of-seat.' },
+  { id: 'romcom',    label: 'Rom-Com',    promptHint: 'Romantic comedies — light, charming, feel-good love stories.' },
+  { id: 'drama',     label: 'Drama',      promptHint: 'Character-driven dramas — emotionally resonant, well-acted.' },
+  { id: 'action',    label: 'Action',     promptHint: 'Action — high-energy, stylish set-pieces, adrenaline.' },
+  { id: 'scifi',     label: 'Sci-Fi',     promptHint: 'Sci-fi — thought-provoking, inventive worlds.' },
+  { id: 'horror',    label: 'Horror',     promptHint: 'Horror — scary, atmospheric, genuinely unsettling.' },
+  { id: 'mystery',   label: 'Mystery',    promptHint: 'Mystery — whodunits, twisty plots, investigative.' },
+  { id: 'docu',      label: 'Documentary',promptHint: 'Documentaries — real stories, compelling subjects.' },
+  { id: 'animated',  label: 'Animated',   promptHint: 'Animated — animation films/shows for adults or family.' },
+  { id: 'feelgood',  label: 'Feel-Good',  promptHint: 'Feel-good — uplifting, cozy, comfort watches.' },
+];
+
+const LANGS = [
+  { id: 'any', label: 'All Languages',   promptHint: '', tmdb: '' },
+  { id: 'gu',  label: 'ગુજરાતી',         promptHint: 'Gujarati-language content ONLY. Prioritize Gujarati films (Chhello Divas, Hellaro, Kutch Express, etc.), web series in Gujarati, and regional content from Gujarat.', tmdb: 'gu' },
+  { id: 'hi',  label: 'हिन्दी',           promptHint: 'Hindi-language content ONLY. Bollywood films and Hindi web series (Amazon Prime, Netflix India, JioCinema, Sony LIV originals).', tmdb: 'hi' },
+  { id: 'en',  label: 'English',         promptHint: 'English-language films and series only (Hollywood, UK, international English-language productions).', tmdb: 'en' },
+];
 
 const LS = {
   get:  (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
@@ -917,6 +1004,11 @@ async function boot() {
     setProfile(p, false);
   }
 
+  // restore filter selections
+  State.mood = LS.getS('duet_mood', 'any');
+  State.lang = LS.getS('duet_lang', 'any');
+  renderFilters();
+
   // restore settings to form
   document.getElementById('antKey').value   = LS.getS('duet_ant', '');
   document.getElementById('tmdbKey').value  = LS.getS('duet_tmdb', '');
@@ -930,6 +1022,42 @@ async function boot() {
   if (State.profile) {
     await loadRecsIfNeeded();
   }
+}
+
+/* ══════════════════════════════════════════════════════
+   FILTERS (mood + language)
+   ══════════════════════════════════════════════════════ */
+function renderFilters() {
+  const moodRow = document.getElementById('moodRow');
+  const langRow = document.getElementById('langRow');
+  if (!moodRow || !langRow) return;
+
+  moodRow.innerHTML = MOODS.map(m =>
+    `<div class="chip ${State.mood === m.id ? 'active' : ''}" data-mood="${m.id}" onclick="pickMood('${m.id}')">${escapeHtml(m.label)}</div>`
+  ).join('');
+
+  langRow.innerHTML = LANGS.map(l =>
+    `<div class="chip ${State.lang === l.id ? 'active' : ''}" data-lang="${l.id}" onclick="pickLang('${l.id}')">${escapeHtml(l.label)}</div>`
+  ).join('');
+}
+
+function pickMood(id) {
+  if (State.mood === id) return;
+  State.mood = id;
+  LS.setS('duet_mood', id);
+  renderFilters();
+  // Clear stale queue and refetch with new filter
+  LS.set('duet_queue_' + State.profile, null);
+  fetchRecs();
+}
+
+function pickLang(id) {
+  if (State.lang === id) return;
+  State.lang = id;
+  LS.setS('duet_lang', id);
+  renderFilters();
+  LS.set('duet_queue_' + State.profile, null);
+  fetchRecs();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1005,7 +1133,7 @@ function updateBadges() {
    RECOMMENDATIONS (Claude API)
    ══════════════════════════════════════════════════════ */
 async function loadRecsIfNeeded() {
-  const queueKey = 'duet_queue_' + State.profile;
+  const queueKey = makeQueueKey();
   const cached = LS.get(queueKey, null);
   if (cached && cached.items && cached.items.length > 0 && cached.ts && (Date.now() - cached.ts < 6 * 60 * 60 * 1000)) {
     State.recs = filterOutSeen(cached.items);
@@ -1016,8 +1144,12 @@ async function loadRecsIfNeeded() {
   await fetchRecs();
 }
 
+function makeQueueKey() {
+  return `duet_queue_${State.profile}_${State.mood}_${State.lang}`;
+}
+
 async function refreshRecs() {
-  LS.set('duet_queue_' + State.profile, null);
+  LS.set(makeQueueKey(), null);
   await fetchRecs();
   showView('discover');
   toast('Fresh recommendations loaded');
@@ -1074,9 +1206,25 @@ async function fetchRecs() {
     ? "You're recommending for the HIS profile. Lean toward his personal taste patterns."
     : "You're recommending for the HER profile. Lean toward elegant, character-driven, emotionally resonant picks — but also consider crossover appeal with what HE has liked (listed below) so they can watch together.";
 
-  const prompt = `You are a cinema curator for a couple using a swipe-to-watch app.
+  // Build mood + language directives
+  const mood = MOODS.find(m => m.id === State.mood) || MOODS[0];
+  const lang = LANGS.find(l => l.id === State.lang) || LANGS[0];
 
-${profileCtx}
+  const moodDirective = mood.promptHint
+    ? `\n\nMOOD FILTER (STRICT): ${mood.promptHint} Every recommendation MUST fit this mood.`
+    : '';
+
+  let langDirective;
+  if (lang.id === 'any') {
+    // "any" means preference order: Gujarati → Hindi → English
+    langDirective = `\n\nLANGUAGE PREFERENCE: Prioritize this language order in the deck: FIRST Gujarati content (Gujarati films, Gujarati web series, Gujarati regional content — include 4-5 if well-matched), THEN Hindi content (Bollywood, Hindi web series — 5-6 picks), THEN English (Hollywood, English-language international — 4-5 picks). The deck should feel diverse across languages but weighted toward Gujarati-first.`;
+  } else {
+    langDirective = `\n\nLANGUAGE FILTER (STRICT): ${lang.promptHint} Every recommendation MUST be primarily in this language. Do not include content in other languages.`;
+  }
+
+  const prompt = `You are a cinema curator for a couple using a swipe-to-watch app. The user lives in a multilingual Indian household — they watch Gujarati, Hindi, and English content.
+
+${profileCtx}${moodDirective}${langDirective}
 
 KNOWN TASTE (watched / rated by this profile):
 ${titlesSample || '(no history yet — suggest widely acclaimed crossover hits)'}
@@ -1085,17 +1233,20 @@ PARTNER HAS RECENTLY LIKED: ${partnerSample || '(none yet)'}
 
 ABSOLUTELY DO NOT RECOMMEND (already seen/rated/swiped): ${excludeSample}
 
-Search the web for currently-streaming or recently-released movies and TV shows (2023–2026 preferred, but include classics they'd enjoy). Return 15 fresh recommendations matching their taste.
+Search the web for currently-streaming or recently-released movies and TV shows (2023–2026 preferred, but include acclaimed classics they'd enjoy). Return 15 fresh recommendations matching their taste AND respecting the mood + language filters above.
+
+IMPORTANT: Always use the most widely-recognized English spelling of titles (as they appear on IMDb/TMDB) so poster lookups work. For example: "Kutch Express" not "કચ્છ એક્સપ્રેસ", "Laapataa Ladies" not "लापता लेडीज़".
 
 Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
 {
-  "title": "string",
+  "title": "string (IMDb/TMDB English spelling)",
   "year": "YYYY",
   "type": "Movie" or "TV",
+  "language": "Gujarati" or "Hindi" or "English" or other,
   "overview": "one-sentence hook, max 20 words",
   "why": "one sentence on why they'd love this given their taste, max 22 words",
   "imdb": "X.X or empty string",
-  "platform": "Netflix/Prime/HBO/etc or empty"
+  "platform": "Netflix/Prime/HBO/JioCinema/Shemaroo/etc or empty"
 }`;
 
   try {
@@ -1138,7 +1289,7 @@ Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
 
     State.recs = filterOutSeen(unique);
 
-    LS.set('duet_queue_' + State.profile, { items: State.recs, ts: Date.now() });
+    LS.set(makeQueueKey(), { items: State.recs, ts: Date.now() });
     renderDeck();
   } catch (e) {
     console.error(e);
@@ -1162,9 +1313,22 @@ async function enrichWithPoster(r) {
   if (!key) return { ...r, poster: '' };
   try {
     const type = r.type === 'TV' ? 'tv' : 'movie';
-    const url = `https://api.themoviedb.org/3/search/${type}?api_key=${key}&query=${encodeURIComponent(r.title)}${r.year ? `&year=${r.year}` : ''}&language=en-US&page=1`;
-    const res = await fetch(url);
-    if (!res.ok) return { ...r, poster: '' };
+    // Detect v4 Bearer token (long JWT starting with "eyJ") vs v3 API key
+    const isV4 = key.startsWith('eyJ') || key.length > 50;
+    let url, opts = {};
+    if (isV4) {
+      url = `https://api.themoviedb.org/3/search/${type}?query=${encodeURIComponent(r.title)}${r.year ? `&year=${r.year}` : ''}&language=en-US&page=1&include_adult=false`;
+      opts.headers = { 'Authorization': `Bearer ${key}`, 'accept': 'application/json' };
+    } else {
+      url = `https://api.themoviedb.org/3/search/${type}?api_key=${key}&query=${encodeURIComponent(r.title)}${r.year ? `&year=${r.year}` : ''}&language=en-US&page=1&include_adult=false`;
+    }
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      if (res.status === 401) {
+        console.warn('TMDB 401 — key rejected. Check your key in Settings.');
+      }
+      return { ...r, poster: '' };
+    }
     const data = await res.json();
     const first = (data.results || [])[0];
     if (!first) return { ...r, poster: '' };
@@ -1173,7 +1337,32 @@ async function enrichWithPoster(r) {
       tmdbId: String(first.id),
       poster: first.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : '',
     };
-  } catch { return { ...r, poster: '' }; }
+  } catch (e) { console.warn('TMDB lookup failed for', r.title, e); return { ...r, poster: '' }; }
+}
+
+// TMDB connectivity test — run from Settings
+async function tmdbTest() {
+  const key = LS.getS('duet_tmdb', '');
+  if (!key) { toast('Paste TMDB key first'); return; }
+  const isV4 = key.startsWith('eyJ') || key.length > 50;
+  const url = isV4
+    ? 'https://api.themoviedb.org/3/search/movie?query=inception&language=en-US'
+    : `https://api.themoviedb.org/3/search/movie?api_key=${key}&query=inception&language=en-US`;
+  const opts = isV4 ? { headers: { 'Authorization': `Bearer ${key}`, 'accept': 'application/json' } } : {};
+  try {
+    const res = await fetch(url, opts);
+    if (res.ok) {
+      const data = await res.json();
+      const hit = (data.results || [])[0];
+      toast(hit ? `TMDB OK ✓ (${isV4 ? 'v4 token' : 'v3 key'})` : 'TMDB responded but empty');
+    } else if (res.status === 401) {
+      toast('TMDB key rejected (401) — regenerate key');
+    } else {
+      toast(`TMDB error ${res.status}`);
+    }
+  } catch (e) {
+    toast('TMDB network error');
+  }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1181,7 +1370,8 @@ async function enrichWithPoster(r) {
    ══════════════════════════════════════════════════════ */
 function renderLoading() {
   const deck = document.getElementById('deck');
-  deck.innerHTML = `<div class="loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div class="spinner"></div><div>Curating for you…</div></div>`;
+  deck.classList.add('is-empty');
+  deck.innerHTML = `<div class="loading"><div class="spinner"></div><div>Curating for you…</div></div>`;
   document.getElementById('deckActions').style.display = 'none';
 }
 
@@ -1190,8 +1380,9 @@ function renderDeck() {
   const actions = document.getElementById('deckActions');
 
   if (!State.recs || State.recs.length === 0) {
+    deck.classList.add('is-empty');
     deck.innerHTML = `
-      <div class="empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="empty">
         <h3>All caught up</h3>
         <p>You've burned through the deck. Time for a fresh batch.</p>
         <button onclick="refreshRecs()">Refresh Deck</button>
@@ -1200,6 +1391,7 @@ function renderDeck() {
     return;
   }
 
+  deck.classList.remove('is-empty');
   // Render top 3 cards stacked
   const top = State.recs.slice(0, 3);
   deck.innerHTML = top.map((r, idx) => cardHTML(r, idx)).reverse().join('');
@@ -1223,6 +1415,7 @@ function cardHTML(r, idx) {
   const metaBits = [];
   if (r.type) metaBits.push(r.type.toUpperCase());
   if (r.year) metaBits.push(r.year);
+  if (r.language && r.language !== 'English') metaBits.push(r.language);
   if (r.platform) metaBits.push(r.platform);
 
   const ratingBit = r.imdb
@@ -1672,10 +1865,11 @@ async function saveSettings() {
     toast('Saved');
   }
 
-  // Refresh recs if we have Anthropic key now
+  // Refresh recs if we have Anthropic key now — clear ALL queue caches
   if (LS.getS('duet_ant', '')) {
-    LS.set('duet_queue_his', null);
-    LS.set('duet_queue_her', null);
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('duet_queue_')) localStorage.removeItem(k);
+    });
     if (State.profile) await loadRecsIfNeeded();
   }
 }

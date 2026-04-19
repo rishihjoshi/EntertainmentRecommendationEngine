@@ -1,4 +1,4 @@
-const CACHE = 'duet-v1';
+const CACHE = 'duet-v2';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {
