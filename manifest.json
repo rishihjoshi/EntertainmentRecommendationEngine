@@ -1,10 +1,13 @@
 {
-  "name": "Duet — His & Her Cinema",
-  "short_name": "Duet",
-  "description": "A swipe-to-watch movie & TV companion for two.",
-  "start_url": "./",
+  "id": "./",
+  "scope": "./",
+  "name": "CineVault — His & Her Cinema",
+  "short_name": "CineVault",
+  "description": "A swipe-to-watch movie and TV companion for couples.",
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["standalone"],
+  "orientation": "portrait-primary",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
   "icons": [

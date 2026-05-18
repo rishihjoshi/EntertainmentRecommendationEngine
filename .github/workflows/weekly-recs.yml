@@ -1,0 +1,46 @@
+name: Weekly Recommendations
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run scoring engine
+        env:
+          TMDB_API_READ_ACCESS_TOKEN: ${{ secrets.TMDB_API_READ_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY:          ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_SHEET_URL:           ${{ secrets.GOOGLE_SHEET_URL }}
+        run: node scripts/generate-recs.js
+
+      - name: Commit pool.json
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: weekly recommendations refresh [skip ci]'
+          file_pattern: 'data/pool.json'
+          commit_user_name: 'Duet Bot'
+          commit_user_email: 'actions@github.com'
+
+      - name: Summary
+        run: |
+          echo "## Recommendations Refreshed" >> $GITHUB_STEP_SUMMARY
+          if [ -f data/pool.json ]; then
+            COUNT=$(node -e "const d=require('./data/pool.json');console.log(d.pool?.length??0)")
+            echo "Pool size: **${COUNT}** items" >> $GITHUB_STEP_SUMMARY
+          fi

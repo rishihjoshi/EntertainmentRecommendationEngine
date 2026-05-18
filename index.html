@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0a0f" id="themeColor">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DUET">
+  <meta name="apple-mobile-web-app-title" content="CineVault">
   <link rel="manifest" href="./manifest.json">
-  <title>DUET — His & Her Cinema</title>
+  <link rel="apple-touch-icon" href="./images/cinevault-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>CineVault — His & Her Cinema</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Sans:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -18,8 +20,8 @@
 
     /* ═══════ THEME TOKENS ═══════ */
     :root {
-      --safe-t: 0px;
-      --safe-b: 0px;
+      --safe-t: env(safe-area-inset-top,    0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
       --nav-h: 64px;
     }
 
@@ -804,7 +806,8 @@
 <!-- ═══════ ONBOARDING ═══════ -->
 <div class="onboard" id="onboard">
   <div class="onboard-inner">
-    <h1>Duet</h1>
+    <img src="./images/cinevault-hero.png" alt="CineVault" style="max-width:220px;width:80%;margin-bottom:12px;border-radius:16px;">
+    <h1>CineVault</h1>
     <div class="tagline">Two tastes · One Watchlist</div>
     <div class="choose">Who's watching?</div>
     <div class="onboard-picks">
@@ -819,7 +822,7 @@
 
   <header>
     <div class="h-row">
-      <div class="logo">Duet</div>
+      <div class="logo">CineVault</div>
       <div class="profile-switch">
         <div class="pill"></div>
         <button id="pbtn-his" onclick="switchProfile('his')">His</button>
@@ -910,7 +913,7 @@
         <button class="sbtn danger" onclick="resetAll()" style="margin-top:20px;">Reset Everything</button>
 
         <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); text-align:center; margin-top:30px;">
-          Duet v1.0 · Built with Claude
+          CineVault v1.0 · Built with Claude
         </div>
       </div>
     </section>
@@ -961,25 +964,30 @@ const State = {
 };
 
 const MOODS = [
-  { id: 'any',       label: 'Any Mood',   promptHint: '' },
-  { id: 'comedy',    label: 'Comedy',     promptHint: 'Comedies — laugh-out-loud, witty, funny.' },
-  { id: 'thriller',  label: 'Thriller',   promptHint: 'Thrillers — suspenseful, gripping, edge-of-seat.' },
-  { id: 'romcom',    label: 'Rom-Com',    promptHint: 'Romantic comedies — light, charming, feel-good love stories.' },
-  { id: 'drama',     label: 'Drama',      promptHint: 'Character-driven dramas — emotionally resonant, well-acted.' },
-  { id: 'action',    label: 'Action',     promptHint: 'Action — high-energy, stylish set-pieces, adrenaline.' },
-  { id: 'scifi',     label: 'Sci-Fi',     promptHint: 'Sci-fi — thought-provoking, inventive worlds.' },
-  { id: 'horror',    label: 'Horror',     promptHint: 'Horror — scary, atmospheric, genuinely unsettling.' },
-  { id: 'mystery',   label: 'Mystery',    promptHint: 'Mystery — whodunits, twisty plots, investigative.' },
-  { id: 'docu',      label: 'Documentary',promptHint: 'Documentaries — real stories, compelling subjects.' },
-  { id: 'animated',  label: 'Animated',   promptHint: 'Animated — animation films/shows for adults or family.' },
-  { id: 'feelgood',  label: 'Feel-Good',  promptHint: 'Feel-good — uplifting, cozy, comfort watches.' },
+  { id: 'any',        label: 'Any Mood',    promptHint: '' },
+  { id: 'comedy',     label: 'Comedy',      promptHint: 'Comedies — laugh-out-loud, witty, funny.' },
+  { id: 'thriller',   label: 'Thriller',    promptHint: 'Thrillers — suspenseful, gripping, edge-of-seat.' },
+  { id: 'romcom',     label: 'Rom-Com',     promptHint: 'Romantic comedies — light, charming, feel-good love stories.' },
+  { id: 'drama',      label: 'Drama',       promptHint: 'Character-driven dramas — emotionally resonant, well-acted.' },
+  { id: 'biopic',     label: 'Biopic',      promptHint: 'Biographical films — compelling real people, true stories of triumph or tragedy. Examples: 12th Fail, 83, Super 30, MS Dhoni, Sanju, Oppenheimer.' },
+  { id: 'historical', label: 'Historical',  promptHint: 'Period and historical films/series — set in a historical era, depicting real or fictional events from the past. Examples: Bajirao Mastani, Mughal-E-Azam, Tanhaji, Panipat, The Crown.' },
+  { id: 'action',     label: 'Action',      promptHint: 'Action — high-energy, stylish set-pieces, adrenaline.' },
+  { id: 'sports',     label: 'Sports',      promptHint: 'Sports dramas — underdog stories, athletic achievement, competitive spirit. Examples: Lagaan, Chak De India, Dangal, Soorarai Pottru, Ford v Ferrari.' },
+  { id: 'scifi',      label: 'Sci-Fi',      promptHint: 'Sci-fi — thought-provoking, inventive worlds and ideas.' },
+  { id: 'horror',     label: 'Horror',      promptHint: 'Horror — scary, atmospheric, genuinely unsettling.' },
+  { id: 'mystery',    label: 'Mystery',     promptHint: 'Mystery — whodunits, twisty plots, investigative thrillers.' },
+  { id: 'docu',       label: 'Documentary', promptHint: 'Documentaries — real stories, compelling subjects.' },
+  { id: 'animated',   label: 'Animated',    promptHint: 'Animated films/shows — for adults or family.' },
+  { id: 'family',     label: 'Family',      promptHint: 'Family-friendly content — suitable for all ages, warm, wholesome. Examples: Taare Zameen Par, Chhichhore, Hichki.' },
+  { id: 'feelgood',   label: 'Feel-Good',   promptHint: 'Feel-good — uplifting, cozy, comfort watches.' },
 ];
 
 const LANGS = [
-  { id: 'any', label: 'All Languages',   promptHint: '', tmdb: '' },
-  { id: 'gu',  label: 'ગુજરાતી',         promptHint: 'Gujarati-language content ONLY. Prioritize Gujarati films (Chhello Divas, Hellaro, Kutch Express, etc.), web series in Gujarati, and regional content from Gujarat.', tmdb: 'gu' },
-  { id: 'hi',  label: 'हिन्दी',           promptHint: 'Hindi-language content ONLY. Bollywood films and Hindi web series (Amazon Prime, Netflix India, JioCinema, Sony LIV originals).', tmdb: 'hi' },
-  { id: 'en',  label: 'English',         promptHint: 'English-language films and series only (Hollywood, UK, international English-language productions).', tmdb: 'en' },
+  { id: 'any',   label: 'All Languages', promptHint: '', tmdb: '' },
+  { id: 'gu',    label: 'ગુજરાતી',       promptHint: 'Gujarati-language content ONLY. The original_language MUST be Gujarati. Include Gujarati films (Chhello Divas, Hellaro, Kutch Express, Vash, Fakt Mahilao Mate, Bey Yaar, Gujjubhai, 21mu Tiffin) and Gujarati web series. DO NOT include Hindi, English, or any other language.', tmdb: 'gu' },
+  { id: 'hi',    label: 'हिन्दी',         promptHint: 'Hindi-language content ONLY. The original_language MUST be Hindi. Bollywood films and Hindi web series on Netflix India, Amazon Prime India, JioCinema, SonyLIV. DO NOT include Gujarati, Tamil, Telugu, or English content.', tmdb: 'hi' },
+  { id: 'south', label: 'South Indian',  promptHint: 'South Indian language films and series ONLY — Tamil (Kollywood), Telugu (Tollywood), Malayalam (Mollywood), or Kannada (Sandalwood). DO NOT include Hindi, Gujarati, or English. Examples: RRR, KGF Chapter 1 & 2, Vikram, Soorarai Pottru, Jalsa, Premalu, 2018, Kaithi, Pushpa, Kantara, James.', tmdb: '' },
+  { id: 'en',    label: 'English',       promptHint: 'English-language films and series only — Hollywood, British, Australian, international English-language productions. DO NOT include dubbed content or films whose original language is not English.', tmdb: 'en' },
 ];
 
 const LS = {
@@ -1135,6 +1143,18 @@ function updateBadges() {
 /* ══════════════════════════════════════════════════════
    RECOMMENDATIONS (Claude API)
    ══════════════════════════════════════════════════════ */
+async function loadFromPool() {
+  try {
+    const res = await fetch('./data/pool.json');
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.generated_at || !Array.isArray(data.pool) || data.pool.length === 0) return null;
+    const ageMs = Date.now() - new Date(data.generated_at).getTime();
+    if (ageMs > 8 * 24 * 60 * 60 * 1000) return null; // stale after 8 days
+    return data.pool;
+  } catch { return null; }
+}
+
 async function loadRecsIfNeeded() {
   const queueKey = makeQueueKey();
   const cached = LS.get(queueKey, null);
@@ -1144,6 +1164,34 @@ async function loadRecsIfNeeded() {
     if (State.recs.length < 5) await fetchRecs(); // top up
     return;
   }
+
+  // Pool path: only for Any Mood (pool is not mood-filtered)
+  if (State.mood === 'any') {
+    const pool = await loadFromPool();
+    if (pool) {
+      let filtered = filterOutSeen(pool);
+
+      if (State.lang !== 'any') {
+        const tmdbCodes = { gu: ['gu'], hi: ['hi'], en: ['en'], south: ['ta','te','ml','kn'] };
+        const labelMap  = { gu: ['gujarati'], hi: ['hindi'], en: ['english'], south: ['tamil','telugu','malayalam','kannada'] };
+        const codes  = tmdbCodes[State.lang] || [];
+        const labels = labelMap[State.lang]  || [];
+        filtered = filtered.filter(r => {
+          if (r.tmdbLang) return codes.includes(r.tmdbLang);
+          return labels.some(l => String(r.language || '').toLowerCase().includes(l));
+        });
+      }
+
+      if (filtered.length >= 8) {
+        filtered.sort((a, b) => (b.score?.total || 0) - (a.score?.total || 0));
+        State.recs = filtered.slice(0, 30);
+        LS.set(makeQueueKey(), { items: State.recs, ts: Date.now() });
+        renderDeck();
+        return;
+      }
+    }
+  }
+
   await fetchRecs();
 }
 
@@ -1275,7 +1323,7 @@ Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 3500,
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
         messages: [{ role: 'user', content: prompt }],
@@ -1305,18 +1353,28 @@ Respond ONLY with a valid JSON array, no markdown, no prose. Each item:
 
     // STRICT language enforcement — if user picked a specific language, drop anything that doesn't match
     if (State.lang !== 'any') {
-      const wanted = State.lang; // 'gu' | 'hi' | 'en'
-      const wantedLabels = { gu: ['gujarati'], hi: ['hindi'], en: ['english'] };
-      const labels = wantedLabels[wanted] || [];
+      const wanted = State.lang;
+      const tmdbCodes = {
+        gu:    ['gu'],
+        hi:    ['hi'],
+        en:    ['en'],
+        south: ['ta', 'te', 'ml', 'kn'],
+      };
+      const labelMap = {
+        gu:    ['gujarati'],
+        hi:    ['hindi'],
+        en:    ['english'],
+        south: ['tamil', 'telugu', 'malayalam', 'kannada'],
+      };
+      const codes  = tmdbCodes[wanted]  || [];
+      const labels = labelMap[wanted]   || [];
       unique = unique.filter(r => {
-        // Prefer TMDB's verified original_language (2-letter code)
-        if (r.tmdbLang) return r.tmdbLang === wanted;
-        // Fallback to Claude's language field
+        if (r.tmdbLang) return codes.includes(r.tmdbLang);
         const claimed = String(r.language || '').toLowerCase();
         return labels.some(lbl => claimed.includes(lbl));
       });
       if (unique.length === 0) {
-        console.warn(`No ${wanted} items matched after strict filter.`);
+        console.warn(`No ${wanted} items matched after strict language filter.`);
       }
     }
 
@@ -1539,8 +1597,12 @@ function attachDrag(el) {
   el.addEventListener('touchend', onEnd);
   el.addEventListener('touchcancel', onEnd);
   el.addEventListener('mousedown', onStart);
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onEnd);
+  const _move = onMove;
+  const _up   = () => { onEnd(); document.removeEventListener('mousemove', _move); document.removeEventListener('mouseup', _up); };
+  el.addEventListener('mousedown', () => {
+    document.addEventListener('mousemove', _move);
+    document.addEventListener('mouseup',   _up);
+  });
 }
 
 function manualSwipe(dir) {
@@ -1578,7 +1640,7 @@ function finishSwipe(el, dir) {
 
   // Remove from queue
   State.recs = State.recs.filter(r => r.id !== id);
-  LS.set('duet_queue_' + State.profile, { items: State.recs, ts: Date.now() });
+  LS.set(makeQueueKey(), { items: State.recs, ts: Date.now() });
 
   setTimeout(() => {
     renderDeck();
