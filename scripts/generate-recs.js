@@ -93,7 +93,8 @@ async function fetchRatings() {
   }
   console.log('Fetching ratings CSV…');
   const res  = await fetch(url);
-  const rows = parseCsv(res.text());
+  const raw  = res.text().replace(/^﻿/, ''); // strip UTF-8 BOM (Google Sheets)
+  const rows = parseCsv(raw);
   if (rows.length < 2) return [];
 
   const headers = rows[0];
@@ -285,7 +286,7 @@ function removeWatched(candidates, ratings) {
 // ── STEP F — Claude enrichment ────────────────────────────────────────────
 
 async function enrichWithClaude(candidates, tasteProfile, ratings) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
   if (!apiKey) {
     console.warn('ANTHROPIC_API_KEY not set — skipping Claude enrichment');
     return candidates.map(c => ({ ...c, why: c.overview || '' }));
@@ -415,7 +416,7 @@ function writeOutput(pool, tasteProfile) {
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
-  const token = process.env.TMDB_API_READ_ACCESS_TOKEN;
+  const token = (process.env.TMDB_API_READ_ACCESS_TOKEN || '').trim();
   if (!token) {
     console.error('TMDB_API_READ_ACCESS_TOKEN is required');
     process.exit(1);
