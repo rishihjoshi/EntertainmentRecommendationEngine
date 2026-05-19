@@ -960,7 +960,7 @@ const State = {
   currentDrag: null,
   syncBusy: false,
   mood: 'any',             // 'any' | 'comedy' | 'thriller' | 'romcom' | ...
-  lang: 'any',             // 'any' | 'gu' | 'hi' | 'en'
+  lang: 'any',             // 'any' | 'gu' | 'hi' | 'south' | 'en'
 };
 
 const MOODS = [
@@ -1068,7 +1068,7 @@ function pickLang(id) {
   State.recs = [];
   LS.set(makeQueueKey(), null);
   renderLoading();
-  fetchRecs();
+  loadRecsIfNeeded();
 }
 
 /* ══════════════════════════════════════════════════════
