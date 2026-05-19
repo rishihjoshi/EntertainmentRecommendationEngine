@@ -867,7 +867,7 @@
       <div class="settings-wrap">
         <div class="setup-card">
           <h3>How it Works</h3>
-          <p style="margin-bottom:10px;">Swipe right to add to your list. Your likes appear on your partner's "Partner's Picks" tab. Shows you both swiped right on appear in "Matches".</p>
+          <p style="margin-bottom:10px;">Swipe right to add to your list. Your likes appear on your partner's "Partner's Picks" tab. Items you both swiped right on appear in "Matches".</p>
           <p><strong>For cross-device sync</strong> (two phones), both devices must paste the same JSONBin key below. On one device, everything works automatically.</p>
         </div>
 
@@ -892,7 +892,7 @@
         <div class="sfield">
           <label>Google Sheet URL (His Ratings)</label>
           <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
-          <div class="hint">In your Google Sheet: File → Share → Publish to web → CSV. Paste that link, or the regular sheet URL (will auto-convert). Expected columns: Title, Type, Year, Rating.</div>
+          <div class="hint">Use your IMDb ratings export or any sheet published as CSV. Columns matched by name: <b>Title</b>, <b>Title Type</b>, <b>Year</b>, <b>Your Rating</b>, <b>Genres</b>, <b>Directors</b>. In Google Sheets: File → Share → Publish to web → CSV, then paste that URL here.</div>
         </div>
 
         <div class="sfield">
@@ -1057,7 +1057,7 @@ function pickMood(id) {
   State.recs = [];
   LS.set(makeQueueKey(), null);
   renderLoading();
-  fetchRecs();
+  loadRecsIfNeeded();
 }
 
 function pickLang(id) {
@@ -1201,7 +1201,7 @@ function makeQueueKey() {
 
 async function refreshRecs() {
   LS.set(makeQueueKey(), null);
-  await fetchRecs();
+  await loadRecsIfNeeded();
   showView('discover');
   toast('Fresh recommendations loaded');
 }
@@ -1644,7 +1644,7 @@ function finishSwipe(el, dir) {
 
   setTimeout(() => {
     renderDeck();
-    if (State.recs.length < 4) fetchRecs(); // background top-up
+    if (State.recs.length < 4) loadRecsIfNeeded(); // background top-up
   }, 350);
 }
 

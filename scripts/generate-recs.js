@@ -18,7 +18,7 @@ const TMDB_GENRE_MAP = {
 };
 
 const LANG_LABEL = { hi: 'Hindi', en: 'English', ta: 'Tamil', te: 'Telugu', gu: 'Gujarati' };
-const LANGS      = ['hi', 'en', 'ta', 'te', 'gu'];
+const LANGS      = ['hi', 'en', 'gu'];
 const TYPES      = ['movie', 'tv'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
